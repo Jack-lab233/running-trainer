@@ -309,13 +309,13 @@ input[type=file] { display: none; }
     <div class="page active" id="page-dash">
       <div class="greeting-wrap">
         <div class="greeting" id="greeting">Good morning 👟</div>
-        <div class="greeting-sub" id="plan-context">Week 8 of 18 · Marathon plan</div>
+        <div class="greeting-sub" id="plan-context">No active plan · Go to AI Coach to generate one</div>
       </div>
       <div class="metric-grid">
-        <div class="metric"><div class="metric-lbl">Weekly km</div><div class="metric-val" id="m-km">82<span> km</span></div><div class="metric-delta up" id="m-km-d">↑ 6 km vs last week</div></div>
-        <div class="metric"><div class="metric-lbl">Avg HR</div><div class="metric-val" id="m-hr">148<span> bpm</span></div><div class="metric-delta down" id="m-hr-d">↑ 3 bpm</div></div>
-        <div class="metric"><div class="metric-lbl">Elevation</div><div class="metric-val" id="m-elev">1,240<span> m</span></div><div class="metric-delta up">↑ 180 m</div></div>
-        <div class="metric"><div class="metric-lbl">Training load</div><div class="metric-val" id="m-load">612</div><div class="metric-delta warn">Moderate</div></div>
+        <div class="metric"><div class="metric-lbl">Weekly km</div><div class="metric-val" id="m-km">—<span> km</span></div><div class="metric-delta" id="m-km-d" style="color:var(--text3);">No data yet</div></div>
+        <div class="metric"><div class="metric-lbl">Avg HR</div><div class="metric-val" id="m-hr">—<span> bpm</span></div><div class="metric-delta" id="m-hr-d" style="color:var(--text3);">No data yet</div></div>
+        <div class="metric"><div class="metric-lbl">Elevation</div><div class="metric-val" id="m-elev">—<span> m</span></div><div class="metric-delta" style="color:var(--text3);">No data yet</div></div>
+        <div class="metric"><div class="metric-lbl">Training load</div><div class="metric-val" id="m-load">—</div><div class="metric-delta" style="color:var(--text3);">No data yet</div></div>
       </div>
 
       <div class="card">
@@ -625,7 +625,7 @@ const defaultPlan = () => ([
 ]);
 
 const weekLabels = {7:'Week 7 — Build phase',8:'Week 8 — Build phase',9:'Week 9 — Peak phase',10:'Week 10 — Peak phase'};
-const loadData = [52,58,42,64,68,48,74,82];
+const loadData = [0,0,0,0,0,0,0,0];
 const pillMap = {easy:'pill-easy',tempo:'pill-tempo',long:'pill-long',interval:'pill-interval',rest:'pill-rest'};
 const pillLabel = {easy:'Easy',tempo:'Tempo',long:'Long run',interval:'Intervals',rest:'Rest',group:'Group'};
 
@@ -636,7 +636,59 @@ async function init() {
   renderLoadBars();
   await loadPlan();
   await loadRaces();
+  await loadDashboardStats();
 }
+
+async function loadDashboardStats() {
+  try {
+    // Get this week's activities
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0,0,0,0);
+    const { data: acts } = await sb.from('activities').select('*').gte('activity_date', weekStart.toISOString().slice(0,10));
+    if (!acts || acts.length === 0) return; // leave as — if no data
+
+    const totalKm = acts.reduce((s,a) => s + (a.distance_km||0), 0);
+    const avgHR = acts.filter(a=>a.avg_hr).length > 0
+      ? Math.round(acts.filter(a=>a.avg_hr).reduce((s,a) => s + a.avg_hr, 0) / acts.filter(a=>a.avg_hr).length)
+      : null;
+    const totalElev = acts.reduce((s,a) => s + (a.elevation_m||0), 0);
+    const tss = Math.round(totalKm * 7.5); // simple TSS estimate
+
+    if (totalKm > 0) {
+      document.getElementById('m-km').innerHTML = Math.round(totalKm) + '<span> km</span>';
+      document.getElementById('m-km-d').textContent = acts.length + ' run' + (acts.length > 1 ? 's' : '') + ' this week';
+      document.getElementById('m-km-d').className = 'metric-delta up';
+    }
+    if (avgHR) {
+      document.getElementById('m-hr').innerHTML = avgHR + '<span> bpm</span>';
+      document.getElementById('m-hr-d').textContent = 'avg this week';
+      document.getElementById('m-hr-d').className = 'metric-delta';
+    }
+    if (totalElev > 0) {
+      document.getElementById('m-elev').innerHTML = totalElev.toLocaleString() + '<span> m</span>';
+    }
+    document.getElementById('m-load').textContent = tss;
+
+    // Update load chart with last 8 weeks
+    const { data: allActs } = await sb.from('activities').select('activity_date,distance_km').order('activity_date', {ascending:true});
+    if (allActs && allActs.length > 0) {
+      const weekTotals = {};
+      allActs.forEach(a => {
+        const d = new Date(a.activity_date);
+        const wk = new Date(d); wk.setDate(d.getDate() - d.getDay());
+        const key = wk.toISOString().slice(0,10);
+        weekTotals[key] = (weekTotals[key]||0) + (a.distance_km||0);
+      });
+      const weeks = Object.keys(weekTotals).sort().slice(-8);
+      weeks.forEach((w,i) => { if(i < 8) loadData[i] = Math.round(weekTotals[w]); });
+      renderLoadBars();
+    }
+    // Update plan context
+    document.getElementById('plan-context').textContent = 'Week ' + currentWeek + ' · ' + Math.round(totalKm) + ' km logged this week';
+  } catch(e) { console.log('Stats load error:', e); }
+}
+
 
 function setGreeting() {
   const h = new Date().getHours();
@@ -656,16 +708,18 @@ function switchPage(id, btn) {
 // ── WEEK STRIP ────────────────────────────────────────────────────────────
 function renderWeekStrip() {
   const days = ['M','T','W','T','F','S','S'];
-  const kms = [12,16,10,16,8,32,0];
-  const states = ['d-done','d-done','d-done','d-done','d-today','d-plan','d-rest'];
-  const labels = ['✓','✓','✓','✓','→','','Z'];
+  const today = new Date().getDay();
+  const todayIdx = today === 0 ? 6 : today - 1;
   const strip = document.getElementById('week-strip');
-  strip.innerHTML = days.map((d,i) => `
-    <div class="day-cell">
+  strip.innerHTML = days.map((d,i) => {
+    const state = i < todayIdx ? 'd-rest' : i === todayIdx ? 'd-today' : 'd-plan';
+    const label = i === todayIdx ? '→' : '';
+    return `<div class="day-cell">
       <div class="day-lbl">${d}</div>
-      <div class="day-dot ${states[i]}">${labels[i]}</div>
-      <div class="day-km">${kms[i]>0?kms[i]+'k':''}</div>
-    </div>`).join('');
+      <div class="day-dot ${state}">${label}</div>
+      <div class="day-km"></div>
+    </div>`;
+  }).join('');
 }
 
 // ── LOAD CHART ────────────────────────────────────────────────────────────
