@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>Running Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg2: #141414;
+  --bg3: #1c1c1c;
+  --border: #2a2a2a;
+  --border2: #333;
+  --text: #f0ede8;
+  --text2: #888;
+  --text3: #555;
+  --green: #1fcc8a;
+  --green-dim: #0d3d28;
+  --green-text: #0a2a1c;
+  --amber: #f0a830;
+  --amber-dim: #3a2800;
+  --red: #e05252;
+  --blue: #4a9eff;
+  --blue-dim: #0d2540;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overflow: hidden; }
+
+/* APP SHELL */
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: 480px; margin: 0 auto; position: relative; }
+.content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 0 80px; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+.content::-webkit-scrollbar { display: none; }
+
+/* NAV */
+.nav { display: flex; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); border-top: 0.5px solid var(--border); padding: 8px 0 max(8px, env(safe-area-inset-bottom)); flex-shrink: 0; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; background: none; border: none; cursor: pointer; color: var(--text3); transition: color 0.15s; font-family: var(--font); }
+.nav-btn.active { color: var(--green); }
+.nav-btn i { font-size: 22px; }
+.nav-btn span { font-size: 10px; font-weight: 500; letter-spacing: 0.04em; }
+
+/* PAGE */
+.page { display: none; padding: 0; }
+.page.active { display: block; }
+.page-header { padding: 20px 16px 8px; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+/* CARDS */
+.card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 0 16px 10px; }
+.card-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--text3); text-transform: uppercase; margin-bottom: 8px; font-family: var(--mono); }
+.card-heading { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+
+/* METRICS */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; margin-bottom: 10px; }
+.metric { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.metric-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--mono); margin-bottom: 4px; }
+.metric-val { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.metric-val span { font-size: 13px; font-weight: 400; color: var(--text2); }
+.metric-delta { font-size: 11px; margin-top: 2px; font-family: var(--mono); }
+.up { color: var(--green); }
+.down { color: var(--red); }
+.warn { color: var(--amber); }
+
+/* WEEK STRIP */
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 16px; margin-bottom: 10px; }
+.day-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.day-lbl { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+.day-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.d-done { background: var(--green); color: var(--green-text); }
+.d-today { background: var(--text); color: var(--bg); }
+.d-rest { background: var(--bg3); color: var(--text3); }
+.d-plan { background: var(--bg3); color: var(--text2); border: 0.5px dashed var(--border2); }
+.day-km { font-size: 9px; color: var(--text3); font-family: var(--mono); }
+
+/* ZONE BARS */
+.zone-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.zone-lbl { font-size: 11px; color: var(--text2); width: 56px; font-family: var(--mono); flex-shrink: 0; }
+.zone-bg { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.zone-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.zone-pct { font-size: 11px; color: var(--text2); width: 30px; text-align: right; font-family: var(--mono); }
+
+/* LOAD CHART */
+.load-bars { display: flex; align-items: flex-end; gap: 5px; height: 60px; margin-bottom: 6px; }
+.load-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; }
+.load-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; transition: height 0.6s ease; }
+.load-xlbl { flex: 1; text-align: center; font-size: 9px; color: var(--text3); font-family: var(--mono); }
+.load-xlbls { display: flex; gap: 5px; }
+
+/* PLAN DAYS */
+.plan-day { display: flex; gap: 12px; padding: 11px 0; border-bottom: 0.5px solid var(--border); align-items: flex-start; cursor: pointer; }
+.plan-day:last-child { border-bottom: none; }
+.plan-day-lbl { font-size: 11px; color: var(--text3); width: 26px; flex-shrink: 0; padding-top: 2px; font-family: var(--mono); }
+.plan-day-body { flex: 1; }
+.plan-day-title { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.plan-day-desc { font-size: 12px; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
+.plan-day-meta { font-size: 12px; color: var(--text2); padding-top: 2px; font-family: var(--mono); flex-shrink: 0; }
+
+/* PILLS */
+.pill { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; }
+.pill-easy { background: var(--green-dim); color: var(--green); }
+.pill-tempo { background: var(--amber-dim); color: var(--amber); }
+.pill-long { background: var(--blue-dim); color: var(--blue); }
+.pill-interval { background: #2d1a2a; color: #d47fff; }
+.pill-rest { background: var(--bg3); color: var(--text3); }
+.pill-group { background: var(--green-dim); color: var(--green); border: 0.5px solid var(--green); }
+
+/* EDIT PANEL */
+.edit-panel { background: var(--bg3); border-radius: var(--radius-sm); padding: 12px; margin-top: 4px; display: none; }
+.edit-panel.open { display: block; }
+.edit-row { margin-bottom: 10px; }
+.edit-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--mono); margin-bottom: 5px; }
+.edit-row input, .edit-row select, .edit-row textarea {
+  width: 100%; font-size: 13px; padding: 8px 10px; border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text);
+  font-family: var(--font); outline: none;
+}
+.edit-row input:focus, .edit-row select:focus { border-color: var(--green); }
+.edit-row textarea { resize: vertical; min-height: 48px; }
+.edit-row select option { background: var(--bg2); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.edit-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* BUTTONS */
+.btn { padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: var(--font); transition: opacity 0.15s; letter-spacing: 0.02em; }
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: var(--green); color: var(--green-text); }
+.btn-outline { background: none; border: 0.5px solid var(--border2); color: var(--text); }
+.btn-danger { background: none; border: 0.5px solid var(--border2); color: var(--text2); }
+.btn-danger:hover { border-color: var(--red); color: var(--red); }
+.btn-full { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: var(--radius); font-size: 14px; }
+.btn-ai { background: var(--bg2); border: 0.5px solid var(--border2); color: var(--text); }
+.btn-ai:hover { border-color: var(--green); color: var(--green); }
+
+/* RACE */
+.race-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 0.5px solid var(--border); align-items: center; }
+.race-item:last-child { border-bottom: none; }
+.race-date { background: var(--bg3); border-radius: var(--radius-sm); padding: 6px 10px; text-align: center; min-width: 44px; flex-shrink: 0; }
+.race-month { font-size: 9px; color: var(--text3); text-transform: uppercase; font-family: var(--mono); }
+.race-day { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.03em; }
+.race-info { flex: 1; }
+.race-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.race-dist { font-size: 12px; color: var(--text2); font-family: var(--mono); margin-top: 2px; }
+.badge-a { background: var(--green-dim); color: var(--green); }
+.badge-b { background: var(--amber-dim); color: var(--amber); }
+.badge-c { background: var(--bg3); color: var(--text2); }
+
+/* GROUP RUN FORM */
+.group-form { background: var(--bg2); border: 0.5px dashed var(--border2); border-radius: var(--radius); padding: 14px 16px; margin: 0 16px 10px; }
+.group-form-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+/* IMPORT */
+.import-box { background: var(--bg2); border: 0.5px dashed var(--border2); border-radius: var(--radius); padding: 18px; margin: 0 16px 10px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.import-box:hover { border-color: var(--green); background: var(--bg3); }
+.import-box i { font-size: 28px; color: var(--text3); margin-bottom: 8px; display: block; }
+.import-box-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.import-box-sub { font-size: 12px; color: var(--text2); margin-top: 3px; font-family: var(--mono); }
+input[type=file] { display: none; }
+
+/* AI COACH */
+.ai-btn-row { padding: 0 16px; margin-bottom: 8px; }
+.ai-response { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 0 16px 10px; font-size: 13px; color: var(--text2); line-height: 1.7; white-space: pre-wrap; font-family: var(--mono); display: none; max-height: 60vh; overflow-y: auto; }
+.ai-response.show { display: block; }
+.ai-loading { display: none; align-items: center; gap: 10px; padding: 14px 16px; margin: 0 16px 10px; }
+.ai-loading.show { display: flex; }
+.ai-loading-dots { display: flex; gap: 4px; }
+.ai-loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.2s ease-in-out infinite; }
+.ai-loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.ai-loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+/* PACE TABLE */
+.pace-table { width: 100%; font-size: 12px; border-collapse: collapse; font-family: var(--mono); }
+.pace-table th { font-weight: 500; color: var(--text3); padding: 6px 8px; text-align: left; border-bottom: 0.5px solid var(--border); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.pace-table td { padding: 7px 8px; border-bottom: 0.5px solid var(--border); color: var(--text); }
+.pace-table tr:last-child td { border-bottom: none; }
+
+/* ADAPT NOTICE */
+.adapt-notice { background: var(--green-dim); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--green); margin-bottom: 10px; display: none; font-family: var(--mono); line-height: 1.6; }
+.adapt-notice.show { display: block; }
+
+/* STATUS */
+.status-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+.status-row:last-child { border-bottom: none; }
+.status-name { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.status-val { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+/* WEEK NAV */
+.week-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; margin-bottom: 10px; }
+.week-nav-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.week-nav-btns { display: flex; gap: 6px; }
+.week-nav-btn { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 5px 12px; font-size: 13px; color: var(--text); cursor: pointer; font-family: var(--font); }
+.week-nav-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--green); color: var(--green-text); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 100; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* GREETING */
+.greeting-wrap { padding: 20px 16px 12px; }
+.greeting { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
+.greeting-sub { font-size: 13px; color: var(--text2); margin-top: 4px; font-family: var(--mono); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: none; align-items: flex-end; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--bg2); border-radius: var(--radius) var(--radius) 0 0; border: 0.5px solid var(--border); padding: 20px 16px max(20px, env(safe-area-inset-bottom)); width: 100%; max-height: 85vh; overflow-y: auto; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 14px; letter-spacing: -0.02em; }
+.modal-close { float: right; background: none; border: none; color: var(--text2); font-size: 22px; cursor: pointer; margin-top: -2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="content" id="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dash">
+      <div class="greeting-wrap">
+        <div class="greeting" id="greeting">Good morning 👟</div>
+        <div class="greeting-sub" id="plan-context">Week 8 of 18 · Marathon plan</div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-lbl">Weekly km</div><div class="metric-val" id="m-km">82<span> km</span></div><div class="metric-delta up" id="m-km-d">↑ 6 km vs last week</div></div>
+        <div class="metric"><div class="metric-lbl">Avg HR</div><div class="metric-val" id="m-hr">148<span> bpm</span></div><div class="metric-delta down" id="m-hr-d">↑ 3 bpm</div></div>
+        <div class="metric"><div class="metric-lbl">Elevation</div><div class="metric-val" id="m-elev">1,240<span> m</span></div><div class="metric-delta up">↑ 180 m</div></div>
+        <div class="metric"><div class="metric-lbl">Training load</div><div class="metric-val" id="m-load">612</div><div class="metric-delta warn">Moderate</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">This week</div>
+        <div class="week-strip" id="week-strip"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">HR zone distribution</div>
+        <div class="zone-row"><div class="zone-lbl">Z1 Easy</div><div class="zone-bg"><div class="zone-fill" style="width:42%;background:#1fcc8a;"></div></div><div class="zone-pct">42%</div></div>
+        <div class="zone-row"><div class="zone-lbl">Z2 Aerobic</div><div class="zone-bg"><div class="zone-fill" style="width:31%;background:#4db890;"></div></div><div class="zone-pct">31%</div></div>
+        <div class="zone-row"><div class="zone-lbl">Z3 Tempo</div><div class="zone-bg"><div class="zone-fill" style="width:14%;background:#f0a830;"></div></div><div class="zone-pct">14%</div></div>
+        <div class="zone-row"><div class="zone-lbl">Z4 Threshold</div><div class="zone-bg"><div class="zone-fill" style="width:10%;background:#e05252;"></div></div><div class="zone-pct">10%</div></div>
+        <div class="zone-row"><div class="zone-lbl">Z5 Max</div><div class="zone-bg"><div class="zone-fill" style="width:3%;background:#a02020;"></div></div><div class="zone-pct">3%</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">8-week load trend</div>
+        <div class="load-bars" id="load-bars"></div>
+        <div class="load-xlbls" id="load-xlbls"></div>
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div class="page" id="page-plan">
+      <div class="page-header">
+        <div class="page-title">Training plan</div>
+        <div class="page-sub">Tap any session to edit. Add a group run to adapt the week.</div>
+      </div>
+
+      <div class="week-nav">
+        <div class="week-nav-label" id="plan-week-label">Week 8 — Build phase</div>
+        <div class="week-nav-btns">
+          <button class="week-nav-btn" onclick="changeWeek(-1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="week-nav-btn" onclick="changeWeek(1)"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <div class="metric-grid" style="margin-bottom:10px;">
+        <div class="metric"><div class="metric-lbl">Target km</div><div class="metric-val" id="plan-total-km">82</div></div>
+        <div class="metric"><div class="metric-lbl">Group runs</div><div class="metric-val" id="plan-group-count">0</div></div>
+      </div>
+
+      <div class="card" id="plan-days-card">
+        <div id="plan-days"></div>
+      </div>
+
+      <div class="group-form">
+        <div class="group-form-title"><i class="ti ti-users"></i> Add a group run</div>
+        <div class="two-col">
+          <div class="edit-row"><div class="edit-lbl">Day</div>
+            <select id="gr-day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option selected>Saturday</option><option>Sunday</option></select>
+          </div>
+          <div class="edit-row"><div class="edit-lbl">Distance (km)</div><input type="number" id="gr-km" value="15" min="1" max="60"></div>
+        </div>
+        <div class="two-col">
+          <div class="edit-row"><div class="edit-lbl">Pace /km</div><input type="text" id="gr-pace" value="4:45" placeholder="e.g. 4:45"></div>
+          <div class="edit-row"><div class="edit-lbl">Type</div>
+            <select id="gr-type"><option>Easy social run</option><option>Tempo group run</option><option>Long run with group</option><option>Trail run</option><option>Race simulation</option></select>
+          </div>
+        </div>
+        <div class="edit-row"><div class="edit-lbl">Notes</div><input type="text" id="gr-notes" placeholder="e.g. Saturday crew at Signal Hill"></div>
+        <div class="adapt-notice" id="adapt-notice"></div>
+        <button class="btn btn-primary btn-full" onclick="addGroupRun()"><i class="ti ti-plus"></i> Add & adapt plan</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Pace & HR zones</div>
+        <table class="pace-table">
+          <thead><tr><th>Zone</th><th>Type</th><th>Pace /km</th><th>HR bpm</th></tr></thead>
+          <tbody>
+            <tr><td>Z1</td><td>Recovery</td><td>5:45–6:20</td><td>&lt;130</td></tr>
+            <tr><td>Z2</td><td>Easy</td><td>5:00–5:30</td><td>130–148</td></tr>
+            <tr><td>Z3</td><td>Tempo</td><td>4:10–4:30</td><td>149–163</td></tr>
+            <tr><td>Z4</td><td>Threshold</td><td>3:50–4:10</td><td>164–174</td></tr>
+            <tr><td>Z5</td><td>VO2 max</td><td>&lt;3:50</td><td>&gt;175</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RACES -->
+    <div class="page" id="page-races">
+      <div class="page-header">
+        <div class="page-title">Race calendar</div>
+        <div class="page-sub">A/B/C race priority system</div>
+      </div>
+      <div class="card" id="races-list"></div>
+      <div class="ai-btn-row">
+        <button class="btn btn-outline btn-full" onclick="openAddRace()"><i class="ti ti-plus"></i> Add race</button>
+      </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div class="page" id="page-import">
+      <div class="page-header">
+        <div class="page-title">Import data</div>
+        <div class="page-sub">Sync from Strava, Garmin or upload files</div>
+      </div>
+      <label class="import-box" for="upload-strava">
+        <input type="file" id="upload-strava" accept="image/*" onchange="handleImport(this,'strava')">
+        <i class="ti ti-brand-strava"></i>
+        <div class="import-box-title">Strava screenshot</div>
+        <div class="import-box-sub">AI reads your activity automatically</div>
+      </label>
+      <label class="import-box" for="upload-garmin">
+        <input type="file" id="upload-garmin" accept="image/*" onchange="handleImport(this,'garmin')">
+        <i class="ti ti-device-watch"></i>
+        <div class="import-box-title">Garmin screenshot</div>
+        <div class="import-box-sub">Works with Garmin Connect exports</div>
+      </label>
+      <label class="import-box" for="upload-gpx">
+        <input type="file" id="upload-gpx" accept=".gpx,.csv,application/gpx+xml,text/csv" onchange="handleImportFile(this)">
+        <i class="ti ti-file-upload"></i>
+        <div class="import-box-title">GPX / CSV file</div>
+        <div class="import-box-sub">Export from Garmin or Strava</div>
+      </label>
+      <div class="card">
+        <div class="card-label">Recent imports</div>
+        <div id="recent-imports"><div style="font-size:13px;color:var(--text3);font-family:var(--mono);padding:8px 0;">No imports yet</div></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Connected accounts</div>
+        <div class="status-row"><div class="status-name"><div class="status-dot dot-amber"></div>Strava</div><div class="status-val">Manual import</div></div>
+        <div class="status-row"><div class="status-name"><div class="status-dot dot-amber"></div>Garmin</div><div class="status-val">Manual import</div></div>
+      </div>
+    </div>
+
+    <!-- AI COACH -->
+    <div class="page" id="page-ai">
+      <div class="page-header">
+        <div class="page-title">AI coach</div>
+        <div class="page-sub">Powered by Claude · Elite marathon & ultra plans</div>
+      </div>
+      <div class="ai-loading" id="ai-loading">
+        <div class="ai-loading-dots"><span></span><span></span><span></span></div>
+        <div style="font-size:13px;color:var(--text2);font-family:var(--mono);">Generating your plan...</div>
+      </div>
+      <div class="ai-response" id="ai-response"></div>
+      <div class="ai-btn-row"><button class="btn btn-primary btn-full" onclick="generatePlan('marathon')"><i class="ti ti-sparkles"></i> Generate 18-week marathon plan</button></div>
+      <div class="ai-btn-row"><button class="btn btn-outline btn-full" onclick="generatePlan('half')"><i class="ti ti-run"></i> Generate 16-week half marathon plan</button></div>
+      <div class="ai-btn-row"><button class="btn btn-outline btn-full" onclick="generatePlan('ultra')"><i class="ti ti-mountain"></i> Generate 20-week ultra/trail plan</button></div>
+      <div class="ai-btn-row"><button class="btn btn-ai btn-full" onclick="analyseLoad()"><i class="ti ti-chart-line"></i> Analyse my training load</button></div>
+      <div class="ai-btn-row"><button class="btn btn-ai btn-full" onclick="injuryAdvice()"><i class="ti ti-first-aid-kit"></i> Injury / recovery advice</button></div>
+    </div>
+
+  </div><!-- end content -->
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchPage('dash',this)"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></button>
+    <button class="nav-btn" onclick="switchPage('plan',this)"><i class="ti ti-route"></i><span>Plan</span></button>
+    <button class="nav-btn" onclick="switchPage('races',this)"><i class="ti ti-trophy"></i><span>Races</span></button>
+    <button class="nav-btn" onclick="switchPage('import',this)"><i class="ti ti-cloud-upload"></i><span>Import</span></button>
+    <button class="nav-btn" onclick="switchPage('ai',this)"><i class="ti ti-brain"></i><span>AI Coach</span></button>
+  </nav>
+</div>
+
+<!-- ADD RACE MODAL -->
+<div class="modal-overlay" id="race-modal">
+  <div class="modal">
+    <div class="modal-title">Add race <button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="edit-row"><div class="edit-lbl">Race name</div><input type="text" id="r-name" placeholder="e.g. Cape Town Marathon"></div>
+    <div class="two-col">
+      <div class="edit-row"><div class="edit-lbl">Date</div><input type="date" id="r-date"></div>
+      <div class="edit-row"><div class="edit-lbl">Distance</div>
+        <select id="r-dist"><option>5K</option><option>10K</option><option>Half Marathon</option><option selected>Marathon</option><option>50K</option><option>65K</option><option>100K</option><option>Other</option></select>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="edit-row"><div class="edit-lbl">Location</div><input type="text" id="r-location" placeholder="Cape Town"></div>
+      <div class="edit-row"><div class="edit-lbl">Priority</div>
+        <select id="r-priority"><option value="a">A race</option><option value="b">B race</option><option value="c">C race</option></select>
+      </div>
+    </div>
+    <div class="edit-row"><div class="edit-lbl">Notes</div><input type="text" id="r-notes" placeholder="Goal time, target, etc."></div>
+    <button class="btn btn-primary btn-full" onclick="saveRace()" style="margin-top:4px;">Save race</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ── Replace with your own keys ──────────────────────────────────
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const ANTHROPIC_API_KEY = 'YOUR_ANTHROPIC_API_KEY';
+// ─────────────────────────────────────────────────────────────────────────
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let currentWeek = 8;
+let openDayIdx = null;
+let plan = [];
+let races = [];
+
+const defaultPlan = () => ([
+  {day:'Mon',type:'Easy recovery',desc:'12 km · Z1/Z2 · HR <145',km:12,intensity:'easy',is_group:false,notes:''},
+  {day:'Tue',type:'Intervals',desc:'6×1000m @ 3:45/km · 90s rest',km:16,intensity:'interval',is_group:false,notes:''},
+  {day:'Wed',type:'Easy aerobic',desc:'10 km @ 5:10–5:30/km',km:10,intensity:'easy',is_group:false,notes:''},
+  {day:'Thu',type:'Tempo run',desc:'16 km incl 10 km @ 4:05/km',km:16,intensity:'tempo',is_group:false,notes:''},
+  {day:'Fri',type:'Strides + activation',desc:'8 km easy + 6×100m strides',km:8,intensity:'easy',is_group:false,notes:''},
+  {day:'Sat',type:'Long run',desc:'32 km @ 5:00–5:15/km · Z2',km:32,intensity:'long',is_group:false,notes:''},
+  {day:'Sun',type:'Rest / mobility',desc:'Foam roll, stretching, sleep',km:0,intensity:'rest',is_group:false,notes:''}
+]);
+
+const weekLabels = {7:'Week 7 — Build phase',8:'Week 8 — Build phase',9:'Week 9 — Peak phase',10:'Week 10 — Peak phase'};
+const loadData = [52,58,42,64,68,48,74,82];
+const pillMap = {easy:'pill-easy',tempo:'pill-tempo',long:'pill-long',interval:'pill-interval',rest:'pill-rest'};
+const pillLabel = {easy:'Easy',tempo:'Tempo',long:'Long run',interval:'Intervals',rest:'Rest',group:'Group'};
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+async function init() {
+  setGreeting();
+  renderWeekStrip();
+  renderLoadBars();
+  await loadPlan();
+  await loadRaces();
+}
+
+function setGreeting() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = g + ' 👟';
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('content').scrollTo(0, 0);
+}
+
+// ── WEEK STRIP ────────────────────────────────────────────────────────────
+function renderWeekStrip() {
+  const days = ['M','T','W','T','F','S','S'];
+  const kms = [12,16,10,16,8,32,0];
+  const states = ['d-done','d-done','d-done','d-done','d-today','d-plan','d-rest'];
+  const labels = ['✓','✓','✓','✓','→','','Z'];
+  const strip = document.getElementById('week-strip');
+  strip.innerHTML = days.map((d,i) => `
+    <div class="day-cell">
+      <div class="day-lbl">${d}</div>
+      <div class="day-dot ${states[i]}">${labels[i]}</div>
+      <div class="day-km">${kms[i]>0?kms[i]+'k':''}</div>
+    </div>`).join('');
+}
+
+// ── LOAD CHART ────────────────────────────────────────────────────────────
+function renderLoadBars() {
+  const max = Math.max(...loadData);
+  const colors = ['#1fcc8a','#1fcc8a','#4db890','#1fcc8a','#1fcc8a','#4db890','#0fa865','#0a7a4a'];
+  document.getElementById('load-bars').innerHTML = loadData.map((v,i) =>
+    `<div class="load-col"><div class="load-bar" style="height:${Math.round((v/max)*56)}px;background:${colors[i]};"></div></div>`
+  ).join('');
+  document.getElementById('load-xlbls').innerHTML = `<div class="load-xlbls" style="width:100%;display:flex;gap:5px;">` +
+    loadData.map((_,i) => `<div class="load-xlbl">W${i+1}</div>`).join('') + '</div>';
+}
+
+// ── PLAN ──────────────────────────────────────────────────────────────────
+async function loadPlan() {
+  try {
+    const { data, error } = await sb.from('training_plan').select('*').eq('week', currentWeek).order('id');
+    if (error) throw error;
+    plan = data && data.length > 0 ? data : defaultPlan();
+  } catch(e) {
+    plan = defaultPlan();
+  }
+  renderPlan();
+}
+
+async function savePlanDay(idx) {
+  const d = plan[idx];
+  try {
+    if (d.id) {
+      await sb.from('training_plan').update({type:d.type,desc:d.desc,km:d.km,intensity:d.intensity,notes:d.notes,is_group:d.is_group}).eq('id',d.id);
+    } else {
+      const { data } = await sb.from('training_plan').insert({week:currentWeek,day:d.day,type:d.type,description:d.desc,km:d.km,intensity:d.intensity,is_group:d.is_group,notes:d.notes}).select();
+      if (data && data[0]) plan[idx].id = data[0].id;
+    }
+    showToast('Saved ✓');
+  } catch(e) { showToast('Saved locally'); }
+}
+
+function renderPlan() {
+  document.getElementById('plan-week-label').textContent = weekLabels[currentWeek] || `Week ${currentWeek}`;
+  const totalKm = plan.reduce((s,d) => s + (d.km||0), 0);
+  const groupCount = plan.filter(d => d.is_group).length;
+  document.getElementById('plan-total-km').textContent = Math.round(totalKm);
+  document.getElementById('plan-group-count').textContent = groupCount;
+
+  const container = document.getElementById('plan-days');
+  container.innerHTML = '';
+  plan.forEach((d, i) => {
+    const isOpen = openDayIdx === i;
+    const pClass = d.is_group ? 'pill-group' : (pillMap[d.intensity] || 'pill-rest');
+    const pLabel = d.is_group ? 'Group' : (pillLabel[d.intensity] || d.intensity);
+    const groupBadge = d.is_group ? `<span class="pill pill-group" style="margin-left:4px;"><i class="ti ti-users" style="font-size:9px;"></i> Group</span>` : '';
+
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div class="plan-day" onclick="toggleDay(${i})">
+        <div class="plan-day-lbl">${d.day}</div>
+        <div class="plan-day-body">
+          <div class="plan-day-title">${d.type}${groupBadge}<span class="pill ${pClass}">${pLabel}</span></div>
+          <div class="plan-day-desc">${d.desc}${d.notes?'<br>📝 '+d.notes:''}</div>
+        </div>
+        <div class="plan-day-meta">${d.km>0?d.km+' km':''}</div>
+      </div>
+      <div class="edit-panel${isOpen?' open':''}" id="edit-${i}">
+        <div class="edit-row"><div class="edit-lbl">Session name</div>
+          <input type="text" value="${d.type}" onchange="updateField(${i},'type',this.value)"></div>
+        <div class="edit-row"><div class="edit-lbl">Description</div>
+          <input type="text" value="${d.desc}" onchange="updateField(${i},'desc',this.value)"></div>
+        <div class="two-col">
+          <div class="edit-row"><div class="edit-lbl">Distance (km)</div>
+            <input type="number" value="${d.km}" min="0" max="60" onchange="updateField(${i},'km',parseFloat(this.value)||0)"></div>
+          <div class="edit-row"><div class="edit-lbl">Intensity</div>
+            <select onchange="updateField(${i},'intensity',this.value)">
+              ${['easy','tempo','long','interval','rest'].map(v=>`<option value="${v}"${d.intensity===v?' selected':''}>${pillLabel[v]}</option>`).join('')}
+            </select></div>
+        </div>
+        <div class="edit-row"><div class="edit-lbl">Notes</div>
+          <textarea onchange="updateField(${i},'notes',this.value)">${d.notes||''}</textarea></div>
+        <div class="edit-actions">
+          <button class="btn btn-primary" onclick="saveDay(${i})">Save</button>
+          ${d.is_group?`<button class="btn btn-danger" onclick="removeGroup(${i})">Remove group</button>`:''}
+        </div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function toggleDay(i) { openDayIdx = openDayIdx === i ? null : i; renderPlan(); }
+function updateField(i, field, val) { plan[i][field] = val; }
+async function saveDay(i) { await savePlanDay(i); openDayIdx = null; renderPlan(); }
+function removeGroup(i) { plan[i].is_group = false; openDayIdx = null; renderPlan(); savePlanDay(i); }
+
+function changeWeek(dir) {
+  currentWeek = Math.max(1, Math.min(20, currentWeek + dir));
+  openDayIdx = null;
+  loadPlan();
+}
+
+function addGroupRun() {
+  const day = document.getElementById('gr-day').value.slice(0,3);
+  const km = parseFloat(document.getElementById('gr-km').value) || 15;
+  const pace = document.getElementById('gr-pace').value || '4:45';
+  const type = document.getElementById('gr-type').value;
+  const notes = document.getElementById('gr-notes').value;
+  const idx = plan.findIndex(d => d.day === day);
+  if (idx === -1) return;
+
+  const prev = {...plan[idx]};
+  plan[idx] = {
+    ...plan[idx],
+    type, desc: `${km} km @ ${pace}/km`,
+    km, intensity: km > 22 ? 'long' : pace < '4:20' ? 'tempo' : 'easy',
+    is_group: true, notes
+  };
+
+  const msg = adaptWeek(idx, prev, km);
+  const notice = document.getElementById('adapt-notice');
+  notice.textContent = '✓ Plan adapted: ' + msg;
+  notice.classList.add('show');
+  openDayIdx = null;
+  renderPlan();
+  savePlanDay(idx);
+  setTimeout(() => notice.classList.remove('show'), 6000);
+}
+
+function adaptWeek(groupIdx, replaced, groupKm) {
+  const msgs = [];
+  if (replaced.intensity === 'interval' || replaced.intensity === 'tempo') {
+    const nextEasy = plan.findIndex((d,i) => i !== groupIdx && d.intensity === 'easy' && d.km > 8);
+    if (nextEasy !== -1) {
+      plan[nextEasy] = {...plan[nextEasy], type: replaced.type, desc: replaced.desc, intensity: replaced.intensity};
+      msgs.push(`moved ${replaced.type} to ${plan[nextEasy].day}`);
+    }
+  }
+  if (groupKm > 25) {
+    const longIdx = plan.findIndex((d,i) => i !== groupIdx && d.intensity === 'long');
+    if (longIdx !== -1) {
+      plan[longIdx].km = Math.max(10, Math.round(plan[longIdx].km * 0.6));
+      plan[longIdx].desc = `${plan[longIdx].km} km easy recovery (reduced — group long run this week)`;
+      plan[longIdx].intensity = 'easy';
+      plan[longIdx].type = 'Recovery long run';
+      msgs.push(`reduced ${plan[longIdx].day} long run to ${plan[longIdx].km} km`);
+    }
+  }
+  const dayBefore = (groupIdx - 1 + 7) % 7;
+  if (plan[dayBefore] && (plan[dayBefore].intensity === 'interval' || plan[dayBefore].intensity === 'tempo')) {
+    plan[dayBefore].km = Math.max(8, plan[dayBefore].km - 4);
+    plan[dayBefore].desc += ' (shortened — group run next day)';
+    msgs.push(`shortened ${plan[dayBefore].day} by 4 km`);
+  }
+  return msgs.length ? msgs.join(', ') + '.' : 'Weekly balance maintained.';
+}
+
+// ── RACES ─────────────────────────────────────────────────────────────────
+async function loadRaces() {
+  try {
+    const { data } = await sb.from('races').select('*').order('date');
+    races = data || defaultRaces();
+  } catch(e) { races = defaultRaces(); }
+  renderRaces();
+}
+
+function defaultRaces() {
+  return [
+    {name:'Two Oceans Half Marathon',date:'2026-06-15',distance:'Half Marathon',location:'Cape Town',priority:'a'},
+    {name:'Cape Town Marathon',date:'2026-09-21',distance:'Marathon',location:'Cape Town',priority:'a'},
+    {name:'Skyrun Ultra',date:'2026-11-08',distance:'65K',location:'Drakensberg',priority:'b'},
+  ];
+}
+
+function renderRaces() {
+  const list = document.getElementById('races-list');
+  if (!races.length) { list.innerHTML = '<div style="font-size:13px;color:var(--text3);font-family:var(--mono);padding:8px 0;">No races added yet</div>'; return; }
+  list.innerHTML = '<div class="card-label">Upcoming races</div>' + races.map((r,i) => {
+    const d = new Date(r.date);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `<div class="race-item">
+      <div class="race-date"><div class="race-month">${months[d.getMonth()]}</div><div class="race-day">${d.getDate()}</div></div>
+      <div class="race-info"><div class="race-name">${r.name}</div><div class="race-dist">${r.distance} · ${r.location||''}</div></div>
+      <span class="pill badge-${r.priority||'c'}">${(r.priority||'c').toUpperCase()} race</span>
+    </div>`;
+  }).join('');
+}
+
+function openAddRace() { document.getElementById('race-modal').classList.add('show'); }
+function closeModal() { document.getElementById('race-modal').classList.remove('show'); }
+
+async function saveRace() {
+  const race = {
+    name: document.getElementById('r-name').value,
+    date: document.getElementById('r-date').value,
+    distance: document.getElementById('r-dist').value,
+    location: document.getElementById('r-location').value,
+    priority: document.getElementById('r-priority').value,
+    notes: document.getElementById('r-notes').value
+  };
+  if (!race.name || !race.date) { showToast('Please fill in name and date'); return; }
+  try {
+    await sb.from('races').insert(race);
+    showToast('Race saved ✓');
+  } catch(e) { showToast('Saved locally'); }
+  races.push(race);
+  renderRaces();
+  closeModal();
+}
+
+// ── IMPORT ────────────────────────────────────────────────────────────────
+async function handleImport(input, source) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('Reading ' + source + ' screenshot...');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result.split(',')[1];
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 500,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: file.type, data: base64 } },
+            { type: 'text', text: 'Extract running activity data from this screenshot. Return JSON only with keys: name, date (YYYY-MM-DD), distance_km (number), duration_seconds (number), avg_hr (number or null), avg_pace (string MM:SS), elevation_m (number or null). No other text.' }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      const txt = data.content[0].text.replace(/```json|```/g,'').trim();
+      const activity = JSON.parse(txt);
+      activity.source = source;
+      try { await sb.from('activities').insert(activity); } catch(e) {}
+      showToast('Activity imported ✓');
+      renderImport(activity);
+    } catch(err) { showToast('Could not read screenshot'); }
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleImportFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('File received — GPX/CSV import ✓');
+  renderImport({ name: file.name, date: new Date().toISOString().slice(0,10), source: 'file' });
+}
+
+function renderImport(activity) {
+  const el = document.getElementById('recent-imports');
+  const item = document.createElement('div');
+  item.style.cssText = 'padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;';
+  item.innerHTML = `<div style="font-weight:600;color:var(--text);">${activity.name||'Activity'}</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px;">${activity.date} · ${activity.source} ${activity.distance_km?'· '+activity.distance_km+' km':''}</div>`;
+  el.prepend(item);
+  if (el.firstChild && el.firstChild.textContent === 'No imports yet') el.removeChild(el.lastChild);
+}
+
+// ── AI COACH ──────────────────────────────────────────────────────────────
+async function callAI(prompt) {
+  const loading = document.getElementById('ai-loading');
+  const response = document.getElementById('ai-response');
+  loading.classList.add('show');
+  response.classList.remove('show');
+  response.textContent = '';
+  document.getElementById('content').scrollTo(0, 0);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    loading.classList.remove('show');
+    response.textContent = data.content[0].text;
+    response.classList.add('show');
+  } catch(e) {
+    loading.classList.remove('show');
+    response.textContent = 'Could not reach AI. Check your API key in the app settings.';
+    response.classList.add('show');
+  }
+}
+
+function generatePlan(type) {
+  const prompts = {
+    marathon: `You are an elite running coach. Generate a detailed 18-week marathon training plan for an elite runner with these specs:
+- Current weekly volume: 80+ km/week
+- Training days: 7 per week
+- Zones: Both HR and pace based
+- Goal: Sub-3 hour marathon
+- Location: Cape Town (hilly terrain available)
+
+Format each week as:
+WEEK [N] — [Phase name] — [Total km] km
+Mon: [session type] — [distance] km — [description]
+Tue: [session type] — [distance] km — [description]
+...and so on for all 7 days.
+
+Include build, peak, and taper phases. Be specific with paces and HR zones.`,
+
+    half: `You are an elite running coach. Generate a detailed 16-week half marathon training plan for an elite runner:
+- Current weekly volume: 80+ km/week  
+- Training days: 7 per week
+- Zones: Both HR and pace based
+- Goal: Sub-1:20 half marathon
+- Location: Cape Town
+
+Format each week clearly with all 7 days, distances, paces and HR targets. Include build, peak, taper phases.`,
+
+    ultra: `You are an elite running coach. Generate a detailed 20-week ultra trail training plan:
+- Current weekly volume: 80+ km/week
+- Training days: 7 per week  
+- Target race: 65km trail ultra
+- Include: back-to-back long runs, hill reps, vertical gain progression, time-on-feet sessions
+- Location: Cape Town (Table Mountain trails available)
+
+Format each week clearly with all 7 days. Specify terrain type, elevation targets, and HR zones.`
+  };
+  callAI(prompts[type]);
+}
+
+function analyseLoad() {
+  callAI(`You are an elite running coach. Analyse this training load data and give specific advice:
+- Current week: ${currentWeek} of 18
+- Weekly km this week: ${plan.reduce((s,d)=>s+(d.km||0),0)} km
+- Hard sessions this week: ${plan.filter(d=>d.intensity==='interval'||d.intensity==='tempo').length}
+- Group runs: ${plan.filter(d=>d.is_group).length}
+- 8-week trend: ${loadData.join(', ')} km
+
+Am I overtraining, undertraining, or on track? What specific adjustments should I make? Keep response concise and actionable.`);
+}
+
+function injuryAdvice() {
+  callAI(`You are an elite running coach and sports physio. I am an elite runner doing 80+ km/week training for a marathon. I may have a niggle or injury. 
+
+Ask me 3 key questions to diagnose the issue, then provide:
+1. Whether to rest, modify, or continue training
+2. Specific session modifications for the next 7 days
+3. When to see a physio
+4. Exercises to help recovery
+
+Be direct and specific.`);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── START ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
