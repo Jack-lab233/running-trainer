@@ -214,6 +214,79 @@ input[type=file] { display: none; }
 .greeting { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
 .greeting-sub { font-size: 13px; color: var(--text2); margin-top: 4px; font-family: var(--mono); }
 
+/* SOCIAL */
+.privacy-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:0.5px solid var(--border); }
+.privacy-row:last-child { border-bottom:none; }
+.privacy-name { font-size:14px; font-weight:600; color:var(--text); }
+.privacy-desc { font-size:12px; color:var(--text2); font-family:var(--mono); margin-top:2px; }
+.toggle-wrap { cursor:pointer; padding:4px; }
+.toggle { width:44px; height:26px; border-radius:13px; background:var(--bg3); border:0.5px solid var(--border2); position:relative; transition:background 0.2s; }
+.toggle::after { content:''; position:absolute; width:20px; height:20px; border-radius:50%; background:var(--text2); top:2px; left:2px; transition:all 0.2s; }
+.toggle.active { background:var(--green); border-color:var(--green); }
+.toggle.active::after { left:20px; background:#fff; }
+.lb-tab { padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:0.5px solid var(--border2); background:none; color:var(--text2); font-family:var(--font); transition:all 0.15s; }
+.lb-tab.active { background:var(--green); color:var(--green-text); border-color:var(--green); }
+.lb-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--border); }
+.lb-row:last-child { border-bottom:none; }
+.lb-rank { font-size:16px; font-weight:700; color:var(--text3); width:24px; font-family:var(--mono); flex-shrink:0; }
+.lb-rank.gold { color:#FFD700; }
+.lb-rank.silver { color:#C0C0C0; }
+.lb-rank.bronze { color:#CD7F32; }
+.lb-avatar { width:36px; height:36px; border-radius:50%; background:var(--bg3); border:0.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--text); flex-shrink:0; }
+.lb-avatar.me { border-color:var(--green); background:var(--green-dim); color:var(--green); }
+.lb-info { flex:1; }
+.lb-name { font-size:13px; font-weight:600; color:var(--text); }
+.lb-sub { font-size:11px; color:var(--text2); font-family:var(--mono); margin-top:1px; }
+.lb-val { font-size:16px; font-weight:700; color:var(--text); font-family:var(--mono); }
+.lb-bar-wrap { height:4px; background:var(--bg3); border-radius:2px; margin-top:4px; overflow:hidden; }
+.lb-bar { height:100%; border-radius:2px; background:var(--green); }
+.challenge-item { padding:12px 0; border-bottom:0.5px solid var(--border); }
+.challenge-item:last-child { border-bottom:none; }
+.challenge-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+.challenge-meta { font-size:12px; color:var(--text2); font-family:var(--mono); margin-bottom:8px; }
+.challenge-progress { display:flex; gap:6px; }
+.challenge-participant { flex:1; }
+.challenge-p-name { font-size:10px; color:var(--text3); font-family:var(--mono); margin-bottom:3px; }
+.challenge-p-bar { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.challenge-p-fill { height:100%; border-radius:3px; }
+.challenge-p-val { font-size:11px; color:var(--text2); font-family:var(--mono); margin-top:2px; }
+.friend-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--border); }
+.friend-item:last-child { border-bottom:none; }
+.friend-avatar { width:38px; height:38px; border-radius:50%; background:var(--bg3); border:0.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:var(--text); flex-shrink:0; }
+.friend-info { flex:1; }
+.friend-name { font-size:14px; font-weight:600; color:var(--text); }
+.friend-stats { font-size:12px; color:var(--text2); font-family:var(--mono); margin-top:2px; }
+.friend-status { width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.friend-status.offline { background:var(--text3); }
+
+/* CHALLENGE MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200; display:none; align-items:flex-end; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--bg2); border-radius:var(--radius) var(--radius) 0 0; border:0.5px solid var(--border); padding:20px 16px max(20px,env(safe-area-inset-bottom)); width:100%; max-height:85vh; overflow-y:auto; }
+.modal-title { font-size:17px; font-weight:700; color:var(--text); margin-bottom:14px; letter-spacing:-0.02em; }
+.modal-close { float:right; background:none; border:none; color:var(--text2); font-size:22px; cursor:pointer; margin-top:-2px; }
+.auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; }
+.auth-logo { font-size: 32px; font-weight: 700; letter-spacing: -0.04em; color: var(--text); margin-bottom: 6px; }
+.auth-logo span { color: var(--green); }
+.auth-sub { font-size: 13px; color: var(--text2); margin-bottom: 36px; font-family: var(--mono); }
+.auth-card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 380px; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 20px; background: var(--bg3); border-radius: var(--radius-sm); padding: 3px; }
+.auth-tab { flex: 1; padding: 7px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; color: var(--text2); border: none; background: none; font-family: var(--font); transition: all 0.15s; }
+.auth-tab.active { background: var(--bg2); color: var(--text); }
+.auth-input-wrap { margin-bottom: 12px; }
+.auth-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--mono); margin-bottom: 5px; }
+.auth-input { width: 100%; font-size: 14px; padding: 10px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg3); color: var(--text); font-family: var(--font); outline: none; }
+.auth-input:focus { border-color: var(--green); }
+.auth-btn { width: 100%; padding: 12px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; border: none; font-family: var(--font); background: var(--green); color: var(--green-text); margin-top: 4px; transition: opacity 0.15s; }
+.auth-btn:hover { opacity: 0.85; }
+.auth-msg { font-size: 12px; text-align: center; margin-top: 12px; font-family: var(--mono); min-height: 18px; }
+.auth-msg.error { color: var(--red); }
+.auth-msg.success { color: var(--green); }
+.user-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 0; }
+.user-email { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.signout-btn { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--mono); padding: 2px 6px; border-radius: 4px; }
+.signout-btn:hover { color: var(--red); }
+
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -230,6 +303,7 @@ input[type=file] { display: none; }
 <body>
 <div class="app">
   <div class="content" id="content">
+    <div class="user-bar"><div class="user-email" id="user-email"></div><button class="signout-btn" onclick="signOut()">Sign out</button></div>
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dash">
@@ -388,15 +462,93 @@ input[type=file] { display: none; }
       <div class="ai-btn-row"><button class="btn btn-ai btn-full" onclick="injuryAdvice()"><i class="ti ti-first-aid-kit"></i> Injury / recovery advice</button></div>
     </div>
 
+    <!-- SOCIAL / SQUAD -->
+    <div class="page" id="page-social">
+      <div class="page-header">
+        <div class="page-title">Squad</div>
+        <div class="page-sub">Friends, leaderboard & challenges</div>
+      </div>
+
+      <!-- PRIVACY TOGGLE -->
+      <div class="card" id="privacy-card">
+        <div class="card-label">Your privacy settings</div>
+        <div class="privacy-row"><div class="privacy-info"><div class="privacy-name">Weekly distance</div><div class="privacy-desc">Friends can see your km totals</div></div><div class="toggle-wrap" onclick="togglePrivacy('distance')"><div class="toggle active" id="priv-distance"></div></div></div>
+        <div class="privacy-row"><div class="privacy-info"><div class="privacy-name">Training plan</div><div class="privacy-desc">Friends can see your sessions</div></div><div class="toggle-wrap" onclick="togglePrivacy('plan')"><div class="toggle" id="priv-plan"></div></div></div>
+        <div class="privacy-row"><div class="privacy-info"><div class="privacy-name">Heart rate data</div><div class="privacy-desc">Friends can see your HR zones</div></div><div class="toggle-wrap" onclick="togglePrivacy('hr')"><div class="toggle" id="priv-hr"></div></div></div>
+        <div class="privacy-row"><div class="privacy-info"><div class="privacy-name">Race calendar</div><div class="privacy-desc">Friends can see your upcoming races</div></div><div class="toggle-wrap" onclick="togglePrivacy('races')"><div class="toggle active" id="priv-races"></div></div></div>
+      </div>
+
+      <!-- ADD FRIEND -->
+      <div class="card">
+        <div class="card-label">Add a friend</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="email" id="friend-email" placeholder="friend@email.com" style="flex:1;font-size:13px;padding:8px 10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);outline:none;">
+          <button class="btn btn-primary" onclick="addFriend()" style="white-space:nowrap;"><i class="ti ti-user-plus"></i> Add</button>
+        </div>
+        <div class="auth-msg" id="friend-msg" style="text-align:left;margin-top:8px;"></div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="card">
+        <div class="card-label">Weekly leaderboard</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;" id="lb-tabs">
+          <button class="lb-tab active" onclick="switchLb('km',this)">Distance</button>
+          <button class="lb-tab" onclick="switchLb('elev',this)">Elevation</button>
+          <button class="lb-tab" onclick="switchLb('streak',this)">Streak</button>
+        </div>
+        <div id="leaderboard-list"></div>
+      </div>
+
+      <!-- CHALLENGES -->
+      <div class="card">
+        <div class="card-label">Active challenges</div>
+        <div id="challenges-list"></div>
+        <button class="btn btn-outline btn-full" style="margin-top:10px;" onclick="openChallenge()"><i class="ti ti-trophy"></i> Create challenge</button>
+      </div>
+
+      <!-- FRIENDS LIST -->
+      <div class="card">
+        <div class="card-label">Your squad</div>
+        <div id="friends-list"><div style="font-size:13px;color:var(--text3);font-family:var(--mono);padding:8px 0;">No friends added yet — invite your running crew!</div></div>
+      </div>
+    </div>
+
   </div><!-- end content -->
 
   <nav class="nav">
     <button class="nav-btn active" onclick="switchPage('dash',this)"><i class="ti ti-layout-dashboard"></i><span>Dashboard</span></button>
     <button class="nav-btn" onclick="switchPage('plan',this)"><i class="ti ti-route"></i><span>Plan</span></button>
-    <button class="nav-btn" onclick="switchPage('races',this)"><i class="ti ti-trophy"></i><span>Races</span></button>
+    <button class="nav-btn" onclick="switchPage('social',this)"><i class="ti ti-users"></i><span>Squad</span></button>
     <button class="nav-btn" onclick="switchPage('import',this)"><i class="ti ti-cloud-upload"></i><span>Import</span></button>
     <button class="nav-btn" onclick="switchPage('ai',this)"><i class="ti ti-brain"></i><span>AI Coach</span></button>
   </nav>
+</div>
+
+<!-- CHALLENGE MODAL -->
+<div class="modal-overlay" id="challenge-modal">
+  <div class="modal">
+    <div class="modal-title">Create challenge <button class="modal-close" onclick="closeChallenge()">×</button></div>
+    <div class="edit-row"><div class="edit-lbl">Challenge type</div>
+      <select id="ch-type">
+        <option value="distance">Most km this week</option>
+        <option value="elevation">Most elevation this week</option>
+        <option value="runs">Most runs this week</option>
+        <option value="long">Longest single run</option>
+        <option value="streak">Longest streak (days)</option>
+      </select>
+    </div>
+    <div class="edit-row"><div class="edit-lbl">Duration</div>
+      <select id="ch-duration">
+        <option value="7">1 week</option>
+        <option value="14">2 weeks</option>
+        <option value="30">1 month</option>
+      </select>
+    </div>
+    <div class="edit-row"><div class="edit-lbl">Challenge name (optional)</div>
+      <input type="text" id="ch-name" placeholder="e.g. Cape Town crew weekly battle">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="createChallenge()" style="margin-top:4px;"><i class="ti ti-trophy"></i> Start challenge</button>
+  </div>
 </div>
 
 <!-- ADD RACE MODAL -->
@@ -418,6 +570,30 @@ input[type=file] { display: none; }
     </div>
     <div class="edit-row"><div class="edit-lbl">Notes</div><input type="text" id="r-notes" placeholder="Goal time, target, etc."></div>
     <button class="btn btn-primary btn-full" onclick="saveRace()" style="margin-top:4px;">Save race</button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-logo">Running<span>.</span></div>
+  <div class="auth-sub">Elite training tracker</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">Sign in</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')" id="tab-signup">Create account</button>
+    </div>
+    <div id="auth-login-form">
+      <div class="auth-input-wrap"><div class="auth-label">Email</div><input class="auth-input" type="email" id="login-email" placeholder="you@example.com"></div>
+      <div class="auth-input-wrap"><div class="auth-label">Password</div><input class="auth-input" type="password" id="login-password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="signIn()">Sign in</button>
+      <div class="auth-msg" id="login-msg"></div>
+    </div>
+    <div id="auth-signup-form" style="display:none;">
+      <div class="auth-input-wrap"><div class="auth-label">Email</div><input class="auth-input" type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="auth-input-wrap"><div class="auth-label">Password (min 6 characters)</div><input class="auth-input" type="password" id="signup-password" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="signUp()">Create account</button>
+      <div class="auth-msg" id="signup-msg"></div>
+    </div>
   </div>
 </div>
 
@@ -843,8 +1019,185 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// ── SOCIAL ────────────────────────────────────────────────────────────────
+const privacyState = { distance: true, plan: false, hr: false, races: true };
+let currentLb = 'km';
+let currentUser = null;
+
+function togglePrivacy(key) {
+  privacyState[key] = !privacyState[key];
+  const el = document.getElementById('priv-' + key);
+  el.classList.toggle('active', privacyState[key]);
+  savePrivacy();
+}
+
+async function savePrivacy() {
+  try { await sb.from('profile').upsert({ id: currentUser?.id, privacy: privacyState }); } catch(e) {}
+}
+
+async function addFriend() {
+  const email = document.getElementById('friend-email').value.trim();
+  const msg = document.getElementById('friend-msg');
+  if (!email) return;
+  msg.textContent = 'Sending request...'; msg.className = 'auth-msg';
+  try {
+    await sb.from('friends').insert({ user_id: currentUser.id, friend_email: email, status: 'pending' });
+    msg.textContent = 'Friend request sent to ' + email; msg.className = 'auth-msg success';
+    document.getElementById('friend-email').value = '';
+    loadFriends();
+  } catch(e) {
+    msg.textContent = 'Could not send request — check the email address'; msg.className = 'auth-msg error';
+  }
+}
+
+async function loadFriends() {
+  // Demo data — replace with real Supabase query once friends table has data
+  const demoFriends = [
+    { name: 'Sarah K', email: 'sarah@demo.com', km: 94, online: true },
+    { name: 'Mike T', email: 'mike@demo.com', km: 71, online: false },
+    { name: 'Lena B', email: 'lena@demo.com', km: 88, online: true },
+  ];
+  const list = document.getElementById('friends-list');
+  list.innerHTML = demoFriends.map(f => `
+    <div class="friend-item">
+      <div class="friend-avatar">${f.name[0]}</div>
+      <div class="friend-info">
+        <div class="friend-name">${f.name}</div>
+        <div class="friend-stats">${f.km} km this week</div>
+      </div>
+      <div class="friend-status ${f.online?'':'offline'}"></div>
+    </div>`).join('');
+  renderLeaderboard('km');
+  renderChallenges();
+}
+
+function switchLb(type, btn) {
+  currentLb = type;
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaderboard(type);
+}
+
+function renderLeaderboard(type) {
+  const me = { name: 'You', km: 82, elev: 1240, streak: 14, isMe: true };
+  const others = [
+    { name: 'Sarah K', km: 94, elev: 1580, streak: 21 },
+    { name: 'Lena B', km: 88, elev: 1320, streak: 9 },
+    { name: 'Mike T', km: 71, elev: 890, streak: 6 },
+  ];
+  const all = [me, ...others].sort((a, b) => b[type === 'km' ? 'km' : type === 'elev' ? 'elev' : 'streak'] - a[type === 'km' ? 'km' : type === 'elev' ? 'elev' : 'streak']);
+  const maxVal = all[0][type === 'km' ? 'km' : type === 'elev' ? 'elev' : 'streak'];
+  const ranks = ['🥇', '🥈', '🥉'];
+  const units = { km: ' km', elev: ' m', streak: ' days' };
+  const list = document.getElementById('leaderboard-list');
+  list.innerHTML = all.map((p, i) => {
+    const val = p[type === 'km' ? 'km' : type === 'elev' ? 'elev' : 'streak'];
+    const pct = Math.round((val / maxVal) * 100);
+    return `<div class="lb-row">
+      <div class="lb-rank">${ranks[i] || (i + 1)}</div>
+      <div class="lb-avatar${p.isMe ? ' me' : ''}">${p.name[0]}</div>
+      <div class="lb-info">
+        <div class="lb-name">${p.name}${p.isMe ? ' (you)' : ''}</div>
+        <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%;${p.isMe ? '' : 'background:var(--blue);'}"></div></div>
+      </div>
+      <div class="lb-val">${val}${units[type]}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChallenges() {
+  const challenges = [
+    { title: 'Most km this week', emoji: '🏃', end: '3 days left', participants: [
+      { name: 'Sarah K', val: 94, max: 94, color: '#1fcc8a' },
+      { name: 'You', val: 82, max: 94, color: '#4a9eff' },
+      { name: 'Mike T', val: 71, max: 94, color: '#f0a830' },
+    ]},
+    { title: 'Longest run this month', emoji: '📏', end: '18 days left', participants: [
+      { name: 'You', val: 32, max: 35, color: '#4a9eff' },
+      { name: 'Lena B', val: 35, max: 35, color: '#1fcc8a' },
+    ]},
+  ];
+  document.getElementById('challenges-list').innerHTML = challenges.map(c => `
+    <div class="challenge-item">
+      <div class="challenge-title">${c.emoji} ${c.title} <span class="pill pill-easy">${c.end}</span></div>
+      <div class="challenge-progress">
+        ${c.participants.map(p => `
+          <div class="challenge-participant">
+            <div class="challenge-p-name">${p.name}</div>
+            <div class="challenge-p-bar"><div class="challenge-p-fill" style="width:${Math.round(p.val/p.max*100)}%;background:${p.color};"></div></div>
+            <div class="challenge-p-val">${p.val}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function openChallenge() { document.getElementById('challenge-modal').classList.add('show'); }
+function closeChallenge() { document.getElementById('challenge-modal').classList.remove('show'); }
+
+function createChallenge() {
+  const type = document.getElementById('ch-type').value;
+  const name = document.getElementById('ch-name').value || document.getElementById('ch-type').options[document.getElementById('ch-type').selectedIndex].text;
+  showToast('Challenge "' + name + '" created!');
+  closeChallenge();
+  renderChallenges();
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('auth-login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('auth-signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+}
+
+async function signIn() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const msg = document.getElementById('login-msg');
+  msg.textContent = 'Signing in...'; msg.className = 'auth-msg';
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; }
+}
+
+async function signUp() {
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+  const msg = document.getElementById('signup-msg');
+  msg.textContent = 'Creating account...'; msg.className = 'auth-msg';
+  const { error } = await sb.auth.signUp({ email, password });
+  if (error) { msg.textContent = error.message; msg.className = 'auth-msg error'; }
+  else { msg.textContent = 'Check your email to confirm your account!'; msg.className = 'auth-msg success'; }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('user-email').textContent = '';
+}
+
 // ── START ─────────────────────────────────────────────────────────────────
-init();
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('user-email').textContent = session.user.email;
+    init();
+    loadFriends();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+});
+
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('user-email').textContent = session.user.email;
+    init();
+    loadFriends();
+  }
+});
 </script>
 </body>
 </html>
